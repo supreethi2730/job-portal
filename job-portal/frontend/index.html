@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>Job Portal Dashboard</title>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  background: #f4f6fb;
+}
+
+.nav {
+  background: #0a66c2;
+  color: white;
+  padding: 15px;
+  font-size: 20px;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.box {
+  background: white;
+  padding: 20px;
+  width: 350px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: #0a66c2;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.dashboard {
+  display: none;
+  padding: 20px;
+}
+
+.job {
+  background: white;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="nav">CareerConnect Job Portal</div>
+
+<!-- LOGIN PAGE -->
+<div class="container" id="loginBox">
+  <div class="box">
+    <h3>Login</h3>
+    <input id="email" placeholder="Email">
+    <input id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+
+    <hr>
+
+    <h3>Register</h3>
+    <input id="rname" placeholder="Name">
+    <input id="remail" placeholder="Email">
+    <input id="rpass" placeholder="Password">
+    <button onclick="register()">Register</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <h2>Welcome, <span id="uname"></span></h2>
+
+  <h3>Available Jobs</h3>
+
+  <button onclick="loadJobs()">Load Jobs</button>
+
+  <div id="jobs"></div>
+</div>
+
+<script>
+const API = "http://localhost:5000";
+
+let currentUser = null;
+
+// REGISTER
+async function register() {
+  await fetch(API+"/register", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      name:rname.value,
+      email:remail.value,
+      password:rpass.value
+    })
+  });
+
+  alert("Registered Successfully");
+}
+
+// LOGIN
+async function login() {
+  const res = await fetch(API+"/login", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      email:email.value,
+      password:password.value
+    })
+  });
+
+  const data = await res.json();
+
+  if(!res.ok){
+    alert(data.message);
+    return;
+  }
+
+  currentUser = data.user;
+
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+
+  document.getElementById("uname").innerText = currentUser.name;
+}
+
+// LOAD JOBS
+async function loadJobs() {
+  const res = await fetch(API+"/jobs");
+  const jobs = await res.json();
+
+  document.getElementById("jobs").innerHTML =
+    jobs.map(j => `
+      <div class="job">
+        <h3>${j.title}</h3>
+        <p>${j.company} - ${j.location}</p>
+      </div>
+    `).join("");
+}
+</script>
+
+</body>
+</html>

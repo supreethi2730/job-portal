@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Naukri Lite - Job Portal</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#f3f4f6;
+}
+
+/* NAVBAR */
+.nav{
+    background:#0a66c2;
+    color:white;
+    padding:15px 30px;
+    font-size:22px;
+    font-weight:bold;
+    display:flex;
+    justify-content:space-between;
+}
+
+/* HERO */
+.hero{
+    background:linear-gradient(135deg,#0a66c2,#4f46e5);
+    color:white;
+    text-align:center;
+    padding:60px 20px;
+}
+
+.search-box{
+    margin-top:20px;
+}
+
+.search-box input{
+    width:300px;
+    padding:10px;
+    border:none;
+    border-radius:5px;
+}
+
+.search-box button{
+    padding:10px 15px;
+    border:none;
+    background:#ff9800;
+    color:white;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+/* CONTAINER */
+.container{
+    display:flex;
+    gap:20px;
+    padding:20px;
+}
+
+/* SIDEBAR FILTER */
+.sidebar{
+    width:250px;
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    height:fit-content;
+}
+
+.sidebar h3{
+    margin-top:0;
+}
+
+.filter{
+    margin-bottom:10px;
+}
+
+/* JOBS */
+.jobs{
+    flex:1;
+}
+
+.job-card{
+    background:white;
+    padding:15px;
+    margin-bottom:10px;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+.job-title{
+    font-size:18px;
+    color:#0a66c2;
+    font-weight:bold;
+}
+
+.company{
+    color:#555;
+    margin:5px 0;
+}
+
+.apply{
+    background:#0a66c2;
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+/* LOGIN */
+.login-box{
+    background:white;
+    width:300px;
+    margin:auto;
+    padding:20px;
+    border-radius:10px;
+    margin-top:30px;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    background:#0a66c2;
+    color:white;
+    border:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="nav">
+    <div>Naukri Lite</div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPage">
+    <div class="login-box">
+        <h3>Login</h3>
+        <input id="email" placeholder="Email">
+        <input id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+
+        <h3>Register</h3>
+        <input id="rname" placeholder="Name">
+        <input id="remail" placeholder="Email">
+        <input id="rpass" placeholder="Password">
+        <button onclick="register()">Register</button>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none;">
+
+<div class="hero">
+    <h1>Find Your Dream Job</h1>
+
+    <div class="search-box">
+        <input id="search" placeholder="Search jobs, company...">
+        <button onclick="loadJobs()">Search</button>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="sidebar">
+        <h3>Filters</h3>
+
+        <div class="filter">
+            <input type="checkbox"> IT Jobs
+        </div>
+
+        <div class="filter">
+            <input type="checkbox"> Remote
+        </div>
+
+        <div class="filter">
+            <input type="checkbox"> Full Time
+        </div>
+    </div>
+
+    <div class="jobs" id="jobList">
+    </div>
+
+</div>
+
+</div>
+
+<script>
+const API = "http://localhost:5000";
+
+async function register(){
+    await fetch(API+"/register",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            name:rname.value,
+            email:remail.value,
+            password:rpass.value
+        })
+    });
+
+    alert("Registered");
+}
+
+async function login(){
+    const res = await fetch(API+"/login",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            email:email.value,
+            password:password.value
+        })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+        alert("Invalid login");
+        return;
+    }
+
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("dashboard").style.display="block";
+
+    loadJobs();
+}
+
+async function loadJobs(){
+    const res = await fetch(API+"/jobs");
+    const jobs = await res.json();
+
+    document.getElementById("jobList").innerHTML =
+    jobs.map(j=>`
+        <div class="job-card">
+            <div class="job-title">${j.title}</div>
+            <div class="company">${j.company} • ${j.location}</div>
+            <button class="apply">Apply</button>
+        </div>
+    `).join("");
+}
+</script>
+
+</body>
+</html>
