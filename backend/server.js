@@ -1,66 +1,46 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("🚀 Job Portal Backend Running");
+// MongoDB (replace with your string)
+mongoose.connect("mongodb://127.0.0.1:27017/jobportal");
+
+// USER MODEL
+const User = mongoose.model("User", {
+  name: String,
+  email: String,
+  password: String
 });
 
-let jobs = [
-  {
-    id: 1,
-    title: "Frontend Developer",
-    company: "Google",
-    location: "Bangalore",
-    type: "Full Time",
-    experience: "2-4 Years",
-    salary: "₹12 - ₹25 LPA"
-  },
-  {
-    id: 2,
-    title: "Backend Developer",
-    company: "Amazon",
-    location: "Hyderabad",
-    type: "Remote",
-    experience: "3-5 Years",
-    salary: "₹15 - ₹30 LPA"
-  },
-  {
-    id: 3,
-    title: "Full Stack Developer",
-    company: "Infosys",
-    location: "Pune",
-    type: "Full Time",
-    experience: "1-3 Years",
-    salary: "₹6 - ₹12 LPA"
-  },
-  {
-    id: 4,
-    title: "Data Analyst",
-    company: "Microsoft",
-    location: "Bangalore",
-    type: "Hybrid",
-    experience: "2-4 Years",
-    salary: "₹10 - ₹18 LPA"
-  },
-  {
-    id: 5,
-    title: "UI/UX Designer",
-    company: "Adobe",
-    location: "Mumbai",
-    type: "Full Time",
-    experience: "2-5 Years",
-    salary: "₹8 - ₹20 LPA"
-  }
-];
-
-app.get("/jobs", (req, res) => {
-  res.json(jobs);
+// REGISTER
+app.post("/register", async (req, res) => {
+  const hashed = await bcrypt.hash(req.body.password, 10);
+  const user = new User({
+    name: req.body.name,
+    email: req.body.email,
+    password: hashed
+  });
+  await user.save();
+  res.send({ message: "User registered" });
 });
 
-app.listen(5000, () => {
-  console.log("🚀 Server running on http://localhost:5000");
+// LOGIN
+app.post("/login", async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) return res.send({ message: "User not found" });
+
+  const match = await bcrypt.compare(req.body.password, user.password);
+  if (!match) return res.send({ message: "Wrong password" });
+
+  const token = jwt.sign({ id: user._id }, "secretkey");
+  res.send({ token });
 });
+
+// SERVER
+app.listen(5000, () => console.log("Server running on port 5000"));
